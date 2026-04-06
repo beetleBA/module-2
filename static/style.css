@@ -1,0 +1,83 @@
+/* static/css/admin.css */
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+
+* {
+  font-family: "Inter", system-ui, sans-serif;
+}
+
+body {
+  background-color: #f9fafb;
+}
+
+.nav-link {
+  transition: all 0.2s ease;
+}
+
+.nav-link:hover {
+  background-color: #f3f4f6;
+  transform: translateX(4px);
+}
+
+.nav-link.active {
+  background-color: #fef3c7;
+  color: #c2410c;
+  border-left: 4px solid #f59e0b;
+}
+
+.btn-primary {
+  background-color: #ea580c;
+  color: white;
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+  background-color: #c2410c;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 15px -3px rgba(234, 88, 12, 0.3);
+}
+
+.form-input {
+  transition: border-color 0.2s ease;
+}
+
+.form-input:focus {
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+  outline: none;
+}
+
+.error-input {
+  border-color: #ef4444 !important;
+  background-color: #fef2f2;
+}
+
+.photo-preview {
+  transition: all 0.2s ease;
+}
+
+.photo-preview:hover {
+  transform: scale(1.03);
+}
+
+.table-row {
+  transition: background-color 0.2s ease;
+}
+
+.table-row:hover {
+  background-color: #fffbeb;
+}
+
+/* Кастомные цвета для сложностей */
+.difficulty-easy {
+  background-color: #d1fae5;
+  color: #10b981;
+}
+.difficulty-medium {
+  background-color: #fef3c7;
+  color: #d97706;
+}
+.difficulty-hard {
+  background-color: #fee2e2;
+  color: #ef4444;
+}

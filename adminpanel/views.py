@@ -1,0 +1,133 @@
+from django.shortcuts import render, redirect
+from django.urls.base import reverse
+from rest_framework import views
+from rest_framework.authentication import SessionAuthentication
+from django.contrib.auth import authenticate, login, logout
+from django.shortcuts import get_object_or_404
+from adminpanel.serializer import AdminLoginSerializer, CategorySerializer, ReceptSerializer
+from recept.models import Category, Recept
+from django.core.paginator import Paginator
+
+
+def errors_field(serializer):
+    errors = {}
+    for f, e in serializer.errors.items():
+        errors[f] = [str(i) for i in e]
+    return errors
+
+
+class AdminLoginView(views.APIView):
+    authentication_classes = []
+    permission_classes = []
+
+    def get(self, request):
+        return render(request, 'login.html')
+
+    def post(self, request):
+        serializer = AdminLoginSerializer(data=request.data)
+        if not serializer.is_valid():
+            return render(request, 'login.html', {'errors': errors_field(serializer)})
+        user = authenticate(
+            email=request.data.get('email'),
+            password=request.data.get('password'),
+        )
+        if user:
+            login(request, user)
+            return redirect(reverse('recept'))
+        return render(request, 'login.html', {'error': 'Неверный логин или пароль'})
+
+
+class AdminLogoutView(views.APIView):
+    authentication_classes = [SessionAuthentication]
+
+    def post(self, request):
+        logout(request)
+        return redirect(reverse('login'))
+
+
+class AdminReceptsView(views.APIView):
+    authentication_classes = [SessionAuthentication]
+
+    def get(self, request):
+        data = Recept.objects.all().order_by('title')
+        paginator = Paginator(data, 5)
+        page = request.GET.get('page', 1)
+        page_obj = paginator.get_page(page)
+        serializer = ReceptSerializer(page_obj, many=True)
+        print(serializer.data)
+
+        return render(request, 'recipes_list.html', {'data': serializer.data, 'page_obj': page_obj})
+
+
+class AdminReceptsCreateView(views.APIView):
+    authentication_classes = [SessionAuthentication]
+
+    def get(self, request):
+        category = Category.objects.all()
+        serializer_category = CategorySerializer(category, many=True)
+        data = Recept.objects.all()
+        serializer = ReceptSerializer(data)
+        return render(request, 'recipe_form.html', {'category': serializer_category.data, 'data': serializer.data})
+
+    def post(self, request):
+        category = Category.objects.all()
+        serializer_category = CategorySerializer(category, many=True)
+        serializer = ReceptSerializer(data=request.data)
+        if not serializer.is_valid():
+            print(serializer.errors)
+
+            return render(request, 'recipe_form.html', {'errors': errors_field(serializer), 'category': serializer_category.data})
+
+        serializer.save()
+        return redirect(reverse('recept'))
+
+
+class AdminCategoriesView(views.APIView):
+    authentication_classes = [SessionAuthentication]
+
+    def get(self, request):
+        data = Category.objects.all()
+        serializer = CategorySerializer(data, many=True)
+        return render(request, 'categories_list.html', {'category': serializer.data})
+
+
+class AdminCategoriesCreateView(views.APIView):
+    authentication_classes = [SessionAuthentication]
+
+    def get(self, request):
+        return render(request, 'category_form.html')
+
+    def post(self, request):
+        serializer = CategorySerializer(data=request.data)
+        if not serializer.is_valid():
+            return render(request, 'category_form.html', {'errors': errors_field(serializer)})
+        serializer.save()
+        return redirect(reverse('categories'))
+
+
+class AdminCategoriesDeleteView(views.APIView):
+    authentication_classes = [SessionAuthentication]
+
+    def post(self, request, id):
+        category = get_object_or_404(Category, id=id)
+        data = Recept.objects.filter(category=category).exists()
+        if not data:
+            category.delete()
+        return redirect(reverse('categories'))
+
+
+class AdminCategoriesEditView(views.APIView):
+    authentication_classes = [SessionAuthentication]
+
+    def get(self, request, id):
+        data = get_object_or_404(Category, id=id)
+        serializer = CategorySerializer(data)
+        return render(request, 'category_form.html', {'data': serializer.data})
+
+    def post(self, request, id):
+        data = get_object_or_404(Category, id=id)
+        serializer = CategorySerializer(data, data=request.data, partial=True)
+        if not serializer.is_valid():
+            return render(request, 'category_form.html', {'errors': errors_field(serializer)})
+        serializer.save()
+        return redirect(reverse('categories'))

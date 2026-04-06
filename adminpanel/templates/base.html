@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Подключение статики Django -->
+    {% load static %}
+
+    <title>{% block title %}Админ-панель — Кухни мира{% endblock %}</title>
+
+    <!-- Подключаем наш CSS файл -->
+    <link rel="stylesheet" href="{% static 'style.css' %}" />
+
+    <!-- Font Awesome -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+
+    <!-- Tailwind CDN (для удобства тренировки) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="tailwind-content">
+    <div class="flex h-screen overflow-hidden">
+      <!-- Sidebar -->
+      <div class="w-64 bg-white border-r border-gray-200 flex flex-col">
+        <div class="p-6 border-b bg-orange-50">
+          <h1 class="text-3xl font-bold text-orange-600">Кухни мира</h1>
+          <p class="text-sm text-orange-700 mt-1">2026 — Год единства</p>
+        </div>
+
+        <nav class="flex-1 p-4 space-y-1 overflow-y-auto">
+          <a
+            href="/admin/recept/"
+            class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700"
+          >
+            <i class="fas fa-utensils w-5"></i>
+            <span>Рецепты</span>
+          </a>
+          <a
+            href="/admin/ingredients/"
+            class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700"
+          >
+            <i class="fas fa-carrot w-5"></i>
+            <span>Ингредиенты</span>
+          </a>
+          <a
+            href="/admin/categories/"
+            class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700"
+          >
+            <i class="fas fa-tags w-5"></i>
+            <span>Категории</span>
+          </a>
+          <a
+            href="/admin/orders/"
+            class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700"
+          >
+            <i class="fas fa-shopping-cart w-5"></i>
+            <span>Заказы</span>
+          </a>
+        </nav>
+
+        <div class="p-4 border-t mt-auto">
+          <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-2xl">
+            <div
+              class="w-9 h-9 bg-orange-100 rounded-full flex items-center justify-center text-orange-600"
+            >
+              <i class="fas fa-user-shield"></i>
+            </div>
+            <div>
+              <p class="font-medium text-sm">Администратор</p>
+              <p class="text-gray-500 text-xs">admin@champ2026</p>
+            </div>
+          </div>
+
+          <form action="{% url 'logout' %}" method="post">
+            {% csrf_token %}
+            <button>Выйти</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Main Content -->
+      <div class="flex-1 flex flex-col overflow-hidden">
+        <header
+          class="bg-white border-b px-8 py-5 flex items-center justify-between"
+        >
+          <h2 class="text-2xl font-semibold text-gray-800">
+            {% block header %}Панель управления{% endblock %}
+          </h2>
+        </header>
+
+        <main class="flex-1 overflow-auto p-8">
+          {% block content %} {% endblock %}
+        </main>
+      </div>
+    </div>
+  </body>
+</html>

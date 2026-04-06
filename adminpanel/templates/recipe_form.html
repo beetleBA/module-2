@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+
+{% block title %}Редактирование рецепта — Кухни мира{% endblock %}
+{% block header %}Редактирование рецепта{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto">
+  <form class="space-y-10" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="grid grid-cols-2 gap-8">
+      <!-- Основная информация -->
+      <div class="space-y-6">
+        <div>
+          <label class="block text-sm font-medium mb-2"
+            >Название рецепта <span class="text-red-500">*</span></label
+          >
+          <input
+            type="text"
+            maxlength="20"
+            class="w-full px-5 py-4 border border-gray-300 rounded-2xl focus:outline-none focus:border-orange-500"
+            placeholder="Название рецепта"
+            required
+            name="title"
+          />
+           {% for i in errors.title %}
+              <p id="emailError" class="text-red-500 text-sm mt-1">{{ i }}</p>
+            {% endfor %}
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium mb-2"
+            >Описание <span class="text-red-500">*</span></label
+          >
+          <textarea
+            rows="5"
+            minlength="50"
+            maxlength="250"
+            name="decription"
+            class="w-full px-5 py-4 border border-gray-300 rounded-2xl focus:outline-none focus:border-orange-500"
+            placeholder="Подробное описание рецепта"
+          ></textarea>
+          {% for i in errors.decription %}
+              <p id="emailError" class="text-red-500 text-sm mt-1">{{ i }}</p>
+            {% endfor %}
+        </div>
+
+        <div class="grid grid-cols-2 gap-6">
+          <div>
+            <label class="block text-sm font-medium mb-2"
+              >Время приготовления (мин)
+              <span class="text-red-500">*</span></label
+            >
+            <input
+              type="number"
+              name="hours"
+              class="w-full px-5 py-4 border border-gray-300 rounded-2xl"
+              required
+            />
+            {% for i in errors.hours %}
+              <p id="emailError" class="text-red-500 text-sm mt-1">{{ i }}</p>
+            {% endfor %}
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-2"
+              >Сложность <span class="text-red-500">*</span></label
+            >
+            <select
+              class="w-full px-5 py-4 border border-gray-300 rounded-2xl"
+              name="status"
+            >
+              <option value="easy">Легко</option>
+              <option value="medium">Средне</option>
+              <option value="hard">Сложно</option>
+            </select>
+            {% for i in errors.status %}
+              <p id="emailError" class="text-red-500 text-sm mt-1">{{ i }}</p>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium mb-2"
+            >Категория <span class="text-red-500">*</span></label
+          >
+          <select
+            class="w-full px-5 py-4 border border-gray-300 rounded-2xl"
+            name="category"
+          >
+            {% for i in category %}
+            <option value="{{ i.id }}">{{ i.title }}</option>
+            {% endfor %}
+          </select>
+        
+        </div>
+            {% for i in errors.category %}
+              <p id="emailError" class="text-red-500 text-sm mt-1">{{ i }}</p>
+            {% endfor %}
+        <div>
+          <label class="block text-sm font-medium mb-2"
+            >Цена (₽) <span class="text-red-500">*</span></label
+          >
+          <input
+            type="number"
+            step="0.01"
+            min="100"
+            name="price"
+            class="w-full px-5 py-4 border border-gray-300 rounded-2xl"
+            placeholder="450.00"
+          />
+          {% for i in errors.number %}
+              <p id="emailError" class="text-red-500 text-sm mt-1">{{ i }}</p>
+            {% endfor %}
+        </div>
+      </div>
+
+      <!-- Фотографии -->
+      <div>
+        <label class="block text-sm font-medium mb-3"
+          >Фотографии рецепта (1–5) <span class="text-red-500">*</span></label
+        >
+        <!-- <input type="file" name="photo" id=""> -->
+      </div>
+    </div>
+    <input type="file" multiple name="photos">
+    {% for i in errors.photos %}
+      <p id="emailError" class="text-red-500 text-sm mt-1">{{ i }}</p>
+    {% endfor %}
+
+    <!-- Ингредиенты -->
+    <div>
+      <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+        <i class="fas fa-carrot"></i> Ингредиенты
+      </h3>
+      <div id="ingredients-list" class="space-y-3">
+        <!-- Динамически добавляются через JS -->
+      </div>
+      <button
+        type="button"
+        onclick="addIngredient()"
+        class="mt-4 text-orange-600 hover:text-orange-700 flex items-center gap-2"
+      >
+        <i class="fas fa-plus"></i> Добавить ингредиент
+      </button>
+    </div>
+
+    <!-- Шаги приготовления -->
+    <div>
+      <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+        <i class="fas fa-list-ol"></i> Шаги приготовления
+      </h3>
+      <div id="steps-list" class="space-y-6">
+        <!-- Динамически добавляются шаги -->
+      </div>
+      <button
+        type="button"
+        onclick="addStep()"
+        class="mt-4 text-orange-600 hover:text-orange-700 flex items-center gap-2"
+      >
+        <i class="fas fa-plus"></i> Добавить шаг
+      </button>
+    </div>
+
+    <div class="flex justify-end gap-4 pt-8 border-t">
+      <a
+        href="/admin/recept/"
+        class="px-8 py-4 border border-gray-300 rounded-2xl hover:bg-gray-50"
+        >Отмена</a
+      >
+      <button
+        type="submit"
+        class="px-10 py-4 bg-orange-600 hover:bg-orange-700 text-white rounded-2xl font-semibold"
+      >
+        Сохранить рецепт
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}
