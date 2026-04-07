@@ -4,6 +4,7 @@
 {% block header %}Редактирование рецепта{% endblock %}
 
 {% block content %}
+
 <div class="max-w-5xl mx-auto">
   <form class="space-y-10" method="post" enctype="multipart/form-data">
     {% csrf_token %}
@@ -154,14 +155,19 @@
         <i class="fas fa-list-ol"></i> Шаги приготовления
       </h3>
       <div id="steps-list" class="space-y-6">
-        <!-- Динамически добавляются шаги -->
+       {% for i in steps %}
+        <p>{{ i.title }}</p>
+        <img src="{{ i.photo }}" alt="Фото" width="100">
+        <a href="/admin/recept/{{ data.id }}/steps/{{ i.id }}/edit">Изменить</a>
+       {% endfor %}
       </div>
       <button
         type="button"
         onclick="addStep()"
         class="mt-4 text-orange-600 hover:text-orange-700 flex items-center gap-2"
       >
-        <i class="fas fa-plus"></i> Добавить шаг
+        <a href="/admin/recept/{{ data.id }}/steps/create"><i class="fas fa-plus"></i> Добавить шаг</a>
+        
       </button>
     </div>
 

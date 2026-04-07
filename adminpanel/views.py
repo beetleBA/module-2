@@ -4,8 +4,8 @@ from rest_framework import views
 from rest_framework.authentication import SessionAuthentication
 from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import get_object_or_404
-from adminpanel.serializer import AdminLoginSerializer, CategorySerializer, ReceptSerializer
-from recept.models import Category, Recept
+from adminpanel.serializer import AdminLoginSerializer, CategorySerializer, ReceptSerializer, StepsSerializer
+from recept.models import Category, Recept, Step
 from django.core.paginator import Paginator
 
 
@@ -31,7 +31,7 @@ class AdminLoginView(views.APIView):
             email=request.data.get('email'),
             password=request.data.get('password'),
         )
-        if user:
+        if user and user.is_superuser:
             login(request, user)
             return redirect(reverse('recept'))
         return render(request, 'login.html', {'error': 'Неверный логин или пароль'})
@@ -93,15 +93,28 @@ class AdminReceptsEditView(views.APIView):
     def get(self, request, id):
         category = Category.objects.all()
         serializer_category = CategorySerializer(category, many=True)
+
         data = get_object_or_404(Recept, id=id)
         serializer = ReceptSerializer(data)
-        return render(request, 'recipe_form.html', {'category': serializer_category.data, 'data': serializer.data})
+
+        steps = Step.objects.filter(recept=data)
+        serializer_steps = StepsSerializer(steps, many=True)
+
+        return render(request, 'recipe_form.html', {'category': serializer_category.data, 'data': serializer.data, 'steps': serializer_steps.data})
 
     def post(self, request, id):
         data = get_object_or_404(Recept, id=id)
         category = Category.objects.all()
         serializer_category = CategorySerializer(category, many=True)
-        serializer = ReceptSerializer(data, data=request.data, partial=True)
+
+        files = request.FILES.getlist('photos')
+        md = request.data.copy()
+        if files:
+            md.setlist('photos', files)
+        else:
+            md.pop('photos', None)
+
+        serializer = ReceptSerializer(data, data=md, partial=True)
         if not serializer.is_valid():
             print(serializer.errors)
 
@@ -174,3 +187,53 @@ class AdminReceptsDeleteView(views.APIView):
             data.on_delete = True
             data.save()
         return redirect(reverse('recept'))
+
+
+class AdminStepsView(views.APIView):
+    authentication_classes = [SessionAuthentication]
+
+    def get(self, request, id):
+        return render(request, 'step_form.html', {'id': id})
+
+    def post(self, request, id):
+        print(request.data)
+        serializer = StepsSerializer(data=request.data)
+
+        if not request.FILES.get('photo'):
+            return render(request, 'step_form.html', {
+                'errors': {'photo': ['Фото обязательно при создании']},
+                'data': request.data
+            })
+
+        if not serializer.is_valid():
+            return render(request, 'step_form.html', {'errors': errors_field(serializer)})
+        serializer.save()
+        return redirect(reverse('recept-edit', kwargs={'id': id}))
+
+
+class AdminStepsEditView(views.APIView):
+    authentication_classes = [SessionAuthentication]
+
+    def get(self, request, id, id_step):
+        data = get_object_or_404(Step, id=id_step)
+        serializer = StepsSerializer(data)
+        return render(request, 'step_form.html', {'id': id, 'data': serializer.data})
+
+    def post(self, request, id, id_step):
+        data = get_object_or_404(Step, id=id_step)
+
+        file = request.FILES.get('photo')
+        md = request.data.copy()
+        if file:
+            md['photo'] = file
+        else:
+            md.pop('photo', None)
+
+        serializer = StepsSerializer(data, data=md, partial=True)
+        if not serializer.is_valid():
+            print(serializer.errors)
+
+            return render(request, 'step_form.html', {'errors': errors_field(serializer), 'data': serializer.data})
+
+        serializer.save()
+        return redirect(reverse('recept-edit', kwargs={'id': str(id)}))

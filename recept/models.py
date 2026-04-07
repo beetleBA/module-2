@@ -44,6 +44,7 @@ class Step(models.Model):
     title = models.CharField(max_length=40)
     description = models.CharField(max_length=255)
     photo = models.ImageField(upload_to='step/')
+    recept = models.ForeignKey(Recept, on_delete=models.CASCADE, null=True, blank=True)
 
 
 class Basket(models.Model):

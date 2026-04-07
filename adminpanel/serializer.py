@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from recept.models import Category, Recept, ReceptPhoto
+from recept.models import Category, Recept, ReceptPhoto, Step
 
 
 class AdminLoginSerializer(serializers.Serializer):
@@ -43,7 +43,7 @@ class ReceptSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def validate_photos(self, photos_list):
-        if len(photos_list) > 5:
+        if photos_list is not None and len(photos_list) > 5:
             raise serializers.ValidationError("Макимум 5")
         return photos_list
 
@@ -77,6 +77,49 @@ class ReceptSerializer(serializers.ModelSerializer):
         photos = validated_data.pop('photos', [])
         recept = Recept.objects.create(**validated_data)
 
+        if not photos:
+            raise serializers.ValidationError("Мимимум 1 фото")
+
         for i in photos:
             ReceptPhoto.objects.create(recept=recept, photo=i)
         return recept
+
+    def update(self, instance, validated_data):
+        photos = validated_data.pop('photos', None)
+
+        for a, v in validated_data.items():
+            setattr(instance, a, v)
+        instance.save()
+
+        if photos is not None:
+            old_photos = ReceptPhoto.objects.filter(recept=instance)
+            for i in old_photos:
+                i.photo.delete(save=False)
+                i.delete()
+
+            for i in photos:
+                ReceptPhoto.objects.create(recept=instance, photo=i)
+        return instance
+
+
+class StepsSerializer(serializers.ModelSerializer):
+    photo = serializers.ImageField(
+        required=False
+    )
+
+    class Meta:
+        model = Step
+        fields = '__all__'
+
+
+    def update(self, obj, validated_data):
+        if 'photo' in validated_data:
+            old = obj.photo
+            obj = super().update(obj, validated_data)
+            if old and old != obj.photo:
+                old.delete(save=False)
+        else:
+            obj = super().update(obj, validated_data)
+
+        return obj
+    
