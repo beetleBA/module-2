@@ -49,7 +49,14 @@ class AdminReceptsView(views.APIView):
     authentication_classes = [SessionAuthentication]
 
     def get(self, request):
+
         data = Recept.objects.all().order_by('title')
+        sort_hours = request.GET.get('hours')
+        if sort_hours:
+            if sort_hours == 'asc':
+                data = data.order_by('hours')
+            else:
+                data = data.order_by('-hours')
         paginator = Paginator(data, 5)
         page = request.GET.get('page', 1)
         page_obj = paginator.get_page(page)
@@ -65,11 +72,32 @@ class AdminReceptsCreateView(views.APIView):
     def get(self, request):
         category = Category.objects.all()
         serializer_category = CategorySerializer(category, many=True)
-        data = Recept.objects.all()
+        return render(request, 'recipe_form.html', {'category': serializer_category.data})
+
+    def post(self, request):
+        category = Category.objects.all()
+        serializer_category = CategorySerializer(category, many=True)
+        serializer = ReceptSerializer(data=request.data)
+        if not serializer.is_valid():
+            print(serializer.errors)
+
+            return render(request, 'recipe_form.html', {'errors': errors_field(serializer), 'category': serializer_category.data})
+
+        serializer.save()
+        return redirect(reverse('recept'))
+
+
+class AdminReceptsEditView(views.APIView):
+    authentication_classes = [SessionAuthentication]
+
+    def get(self, request, id):
+        category = Category.objects.all()
+        serializer_category = CategorySerializer(category, many=True)
+        data = get_object_or_404(Recept, id=id)
         serializer = ReceptSerializer(data)
         return render(request, 'recipe_form.html', {'category': serializer_category.data, 'data': serializer.data})
 
-    def post(self, request):
+    def post(self, request, id):
         category = Category.objects.all()
         serializer_category = CategorySerializer(category, many=True)
         serializer = ReceptSerializer(data=request.data)
@@ -131,3 +159,17 @@ class AdminCategoriesEditView(views.APIView):
             return render(request, 'category_form.html', {'errors': errors_field(serializer)})
         serializer.save()
         return redirect(reverse('categories'))
+
+
+class AdminReceptsDeleteView(views.APIView):
+    authentication_classes = [SessionAuthentication]
+
+    def post(self, request, id):
+        data = get_object_or_404(Recept, id=id)
+        print("sakd")
+        if data.on_delete:
+            data.delete()
+        else:
+            data.on_delete = True
+            data.save()
+        return redirect(reverse('recept'))
