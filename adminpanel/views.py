@@ -98,13 +98,14 @@ class AdminReceptsEditView(views.APIView):
         return render(request, 'recipe_form.html', {'category': serializer_category.data, 'data': serializer.data})
 
     def post(self, request, id):
+        data = get_object_or_404(Recept, id=id)
         category = Category.objects.all()
         serializer_category = CategorySerializer(category, many=True)
-        serializer = ReceptSerializer(data=request.data)
+        serializer = ReceptSerializer(data, data=request.data, partial=True)
         if not serializer.is_valid():
             print(serializer.errors)
 
-            return render(request, 'recipe_form.html', {'errors': errors_field(serializer), 'category': serializer_category.data})
+            return render(request, 'recipe_form.html', {'errors': errors_field(serializer), 'category': serializer_category.data, 'data': serializer.data})
 
         serializer.save()
         return redirect(reverse('recept'))
