@@ -111,7 +111,6 @@ class StepsSerializer(serializers.ModelSerializer):
         model = Step
         fields = '__all__'
 
-
     def update(self, obj, validated_data):
         if 'photo' in validated_data:
             old = obj.photo
@@ -122,4 +121,3 @@ class StepsSerializer(serializers.ModelSerializer):
             obj = super().update(obj, validated_data)
 
         return obj
-    

@@ -16,6 +16,7 @@ class UserManager(BaseUserManager):
         kwargs.setdefault('is_active', True)
         kwargs.setdefault('is_superuser', True)
         kwargs.setdefault('is_staff', True)
+        kwargs.setdefault('role', 'admin')
         return self.create_user(email, password, **kwargs)
 
 
@@ -24,6 +25,8 @@ class User(AbstractUser):
     email = models.EmailField(
         unique=True,
     )
+    role = models.CharField(max_length=20, default='user', choices=[(
+        'user', 'Обычный пользователь'), ('admin', 'Администратор')])
     objects = UserManager()
 
     USERNAME_FIELD = "email"
