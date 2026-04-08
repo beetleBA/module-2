@@ -1,10 +1,11 @@
 from rest_framework import views
 from rest_framework.response import Response
-from recept.models import Recept
+from recept.models import Favorite, Recept
 from user.serializers import ApiReceptSerializer, AuthSerializer, RegistrSerializer
 from django.contrib.auth import authenticate
 from rest_framework.authtoken.models import Token
 from django.core.paginator import Paginator
+from django.shortcuts import get_object_or_404
 
 
 class RegisterView(views.APIView):
@@ -48,4 +49,32 @@ class ReceptsView(views.APIView):
 
 class ReceptsIdView(views.APIView):
     def get(self, request):
+        pass
+
+
+class FavoriteViews(views.APIView):
+    def post(self, request):
+        if 'recipe_id' not in request.data:
+            return Response({"нет recipe_id"})
+
+        recipe_id = request.data['recipe_id']
+
+        exists = Recept.objects.filter(id=recipe_id).exists()
+        if not exists:
+            return Response({'Рецепта нет'})
+        data = get_object_or_404(Recept, id=recipe_id)
+
+        recept_like = Favorite.objects.filter(
+            user=request.user, recept=recipe_id).exists()
+
+        if data and recept_like:
+            return Response({"message": "Recipe already in favorites"
+                             }, status=409)
+        if data:
+            Favorite.objects.create(user=request.user, recept=data)
+            return Response({"success": True, "message": "Recipe added to favorites"}, status=201)
+
+        return Response({"message": "Recipe not found"}, status=404)
+
+    def delete(self, request):
         pass
