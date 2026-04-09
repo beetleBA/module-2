@@ -1,6 +1,7 @@
 from rest_framework import views
 from rest_framework.response import Response
-from recept.models import Favorite, Recept
+from adminpanel.serializer import CategorySerializer, ReceptSerializer
+from recept.models import Category, Favorite, Recept
 from user.serializers import ApiReceptSerializer, AuthSerializer, RegistrSerializer
 from django.contrib.auth import authenticate
 from rest_framework.authtoken.models import Token
@@ -46,6 +47,20 @@ class ReceptsView(views.APIView):
         serializer = ApiReceptSerializer(page_obj, many=True)
         return Response({'data': serializer.data, 'paginator': {'current_page': page, 'total': paginator.num_pages, 'per_page': 5}}, status=200)
 
+    def post(self, request):
+        files = request.FILES.getlist('photos')
+        md = request.data.copy()
+        if files:
+            md.setlist('photos', files)
+        else:
+            md.pop('photos', None)
+
+        serializer = ReceptSerializer(data=md)
+        if not serializer.is_valid():
+            return Response({'error': serializer.errors}, status=403)
+        data = serializer.save()
+        return Response({'data': data}, status=403)
+
 
 class ReceptsIdView(views.APIView):
     def get(self, request):
@@ -78,3 +93,10 @@ class FavoriteViews(views.APIView):
 
     def delete(self, request):
         pass
+
+
+class CategoryViews(views.APIView):
+    def get(self, request):
+        data = Category.objects.all()
+        serialiser = CategorySerializer(data, many=True)
+        return Response(serialiser.data)

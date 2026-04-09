@@ -52,4 +52,4 @@ class ApiReceptSerializer(serializers.ModelSerializer):
 
     def get_default_image(self, obj):
         photo = ReceptPhoto.objects.filter(recept=obj).first()
-        return photo.photo.url
+        return photo.photo.url if photo else ''
